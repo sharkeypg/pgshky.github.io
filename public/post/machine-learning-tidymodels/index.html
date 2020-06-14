@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> Paul Sharkey | Machine Learning in R with Tidymodels </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.68.3" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="Manchester-based Data Scientist">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="/">
+    
+    <link rel="shortcut icon" href="/favicons/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
+
+    <link rel="canonical" href="/post/machine-learning-tidymodels/">
+    <link rel="stylesheet" href="/css/foundation.css" rel="stylesheet" id="theme-stylesheet">
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="/images/paul.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">Paul Sharkey</a></h3>
+        <div class="description">
+          <p>Manchester-based Data Scientist</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://www.linkedin.com/in/paul-sharkey-6b831961/" rel="me" >
+          <i class="fa fa-linkedin" aria-hidden="true" title="Linkedin"></i>
+        </a>
+        
+        <a href="https://github.com/sharkeypg" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+        <a href="mailto:pgshky@gmail.com" rel="me" >
+          <i class="fa fa-envelope" aria-hidden="true" title="e-mail"></i>
+        </a>
+        
+        <a href="https://twitter.com/pgshky" rel="me" >
+          <i class="fa fa-twitter" aria-hidden="true" title="Twitter"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; Paul Sharkey 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="About">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>Machine Learning in R with Tidymodels
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Sun, Jun 14, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">15-minute read</span>
+        </div>
+        
+        </div>
+
+    <h1 id="background">Background</h1>
+
+<p>There are few machine learning frameworks that compete with <em>scikit-learn</em>, but as a native R user by trade, I was keen to explore an approach for building a pipeline in R for the various stages of the machine working workflow. Luckily, around the same time, <em>Tidymodels</em> had just come into maturity, with a very nice online <a href="https://www.tidymodels.org/">vignette</a> containing the nicest documentation a programmer could ask for. Also around the same time, I was working with a colleague to design an online course for introductory R users, and we decided that it would be nice to provide a gentle introduction to machine learning through the lense of Tidymodels. This post is adapted from that session, so forgive me if the mathematical and algorithmic detail is a little light. The aim of this post is to provide a basic template for Tidymodels use that can be adapted to more complex and challenging problems going forward.</p>
+
+<h1 id="what-is-tidymodels">What is Tidymodels?</h1>
+
+<p>Tidymodels is a relatively new suite of packages for machine learning that follow the principles of the <a href="https://www.tidymodels.org/">Tidyverse</a>. Tidymodels has a <em>lot</em> of functionality but in this post we'll cover the main components of the machine learning workflow:</p>
+
+<ul>
+<li>Data preprocessing</li>
+<li>Training a model</li>
+<li>Evaluating model performance</li>
+<li>Model tuning</li>
+</ul>
+
+<p>Tidymodels is an umbrella package, like Tidyverse, containing packages that contribute to individual stages of this process; for example, the <code>recipes</code> package is a neat mechanism for preprocessing data that can be loaded for isolated tasks and doesn't necessarily need to feed into training a model.</p>
+
+<p>Here are the libraries this post will use:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(tidymodels)
+<span style="color:#a6e22e">library</span>(data.table) <span style="color:#75715e">#because fread() is the best!</span>
+<span style="color:#a6e22e">library</span>(tidyverse)
+<span style="color:#a6e22e">library</span>(GGally)</code></pre></div>
+<p>We're going to use the <a href="https://archive.ics.uci.edu/ml/datasets/wine+quality">Wine Quality dataset</a> (because wine is great). Here we're trying to predict, given the chemical properties of wine, whether its quality will be good or bad. This is known as a <em>classification</em> problem, where we want to predict whether something falls into a group, as opposed to a <em>regression</em> problem, which trys to predict the value of a continuous numerical quantity, e.g. house prices.</p>
+
+<p>The wine dataset is available from the UCI machine learning repository. I've made some alterations to the dataset to a) turn it into a classification problem and b) explore how we can handle not just numerical but also categorical features.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">red_url <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv&#34;</span>
+red_raw <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">fread</span>(red_url, header <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>, sep <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;;&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">mutate</span>(quality <span style="color:#f92672">=</span> <span style="color:#a6e22e">ifelse</span>(quality <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">6</span>, <span style="color:#e6db74">&#39;good&#39;</span>, <span style="color:#e6db74">&#39;bad&#39;</span>),
+         alcohol <span style="color:#f92672">=</span> <span style="color:#a6e22e">ifelse</span>(alcohol <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">10</span>, <span style="color:#a6e22e">ifelse</span>(alcohol <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">12</span>, <span style="color:#e6db74">&#39;high&#39;</span>, <span style="color:#e6db74">&#39;medium&#39;</span>), <span style="color:#e6db74">&#39;low&#39;</span>)) <span style="color:#f92672">%&gt;%</span>
+         <span style="color:#a6e22e">mutate_if</span>(is.character, as.factor)</code></pre></div>
+<p>The two classes are finely balanced, which is good!</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">red_raw <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">count</span>(quality) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">mutate</span>(prop <span style="color:#f92672">=</span> n<span style="color:#f92672">/</span><span style="color:#a6e22e">sum</span>(n))</code></pre></div><pre><code>## # A tibble: 2 x 3
+##   quality     n  prop
+##   &lt;fct&gt;   &lt;int&gt; &lt;dbl&gt;
+## 1 bad       744 0.465
+## 2 good      855 0.535</code></pre>
+<p>We can use the <code>glimpse()</code> function to see what our data looks like - all are numeric with the exception of the response variable and the level of alcohol content.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">glimpse</span>(red_raw)</code></pre></div><pre><code>## Rows: 1,599
+## Columns: 12
+## $ `fixed acidity`        &lt;dbl&gt; 7.4, 7.8, 7.8, 11.2, 7.4, 7.4, 7.9, 7.3, 7.8, …
+## $ `volatile acidity`     &lt;dbl&gt; 0.700, 0.880, 0.760, 0.280, 0.700, 0.660, 0.60…
+## $ `citric acid`          &lt;dbl&gt; 0.00, 0.00, 0.04, 0.56, 0.00, 0.00, 0.06, 0.00…
+## $ `residual sugar`       &lt;dbl&gt; 1.9, 2.6, 2.3, 1.9, 1.9, 1.8, 1.6, 1.2, 2.0, 6…
+## $ chlorides              &lt;dbl&gt; 0.076, 0.098, 0.092, 0.075, 0.076, 0.075, 0.06…
+## $ `free sulfur dioxide`  &lt;dbl&gt; 11, 25, 15, 17, 11, 13, 15, 15, 9, 17, 15, 17,…
+## $ `total sulfur dioxide` &lt;dbl&gt; 34, 67, 54, 60, 34, 40, 59, 21, 18, 102, 65, 1…
+## $ density                &lt;dbl&gt; 0.9978, 0.9968, 0.9970, 0.9980, 0.9978, 0.9978…
+## $ pH                     &lt;dbl&gt; 3.51, 3.20, 3.26, 3.16, 3.51, 3.51, 3.30, 3.39…
+## $ sulphates              &lt;dbl&gt; 0.56, 0.68, 0.65, 0.58, 0.56, 0.56, 0.46, 0.47…
+## $ alcohol                &lt;fct&gt; low, low, low, low, low, low, low, medium, low…
+## $ quality                &lt;fct&gt; bad, bad, bad, good, bad, bad, bad, good, good…</code></pre>
+<p>First we want to split our data into a training set and a test set. We will build our predictive model on the training set and use the test set to evaluate the model's performance. The <code>rsample</code> package is useful here and contains functions to make this process really simple. If two classes are imbalanced the <code>strata =</code> argument makes sure that the dataset is split roughly evenly by class.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">set.seed</span>(<span style="color:#ae81ff">123</span>)
+
+<span style="color:#75715e">#split data into 75% and 25% partitions</span>
+data_split <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">initial_split</span>(red_raw, prop <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span><span style="color:#f92672">/</span><span style="color:#ae81ff">4</span>)
+
+<span style="color:#75715e">#gather training and test data</span>
+train_data <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">training</span>(data_split)
+test_data <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">testing</span>(data_split)</code></pre></div>
+<h1 id="exploratory-analysis">Exploratory analysis</h1>
+
+<p>The first part of any machine learning workflow should be to visualise your data. This is useful to identify:</p>
+
+<ul>
+<li>The distribution of each feature</li>
+<li>Relationships between your response variables and features</li>
+<li>Relationships between features</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">ggpairs</span>(train_data)  <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">theme</span>(axis.text.x <span style="color:#f92672">=</span> <span style="color:#a6e22e">element_blank</span>(), axis.ticks <span style="color:#f92672">=</span> <span style="color:#a6e22e">element_blank</span>())</code></pre></div>
+<p><img src="/post/2020-06-14-Tidymodels_files/figure-html/unnamed-chunk-6-1.png" width="1920" /></p>
+
+<p>This reveals some interesting insights, such as:</p>
+
+<ul>
+<li>Bad wine is more likely to contain higher levels of sulfur dioxide and volatile acidity.</li>
+<li>Fixed acidity is strong positively correlated with density, for example.</li>
+<li>Many of the features are right-skewed.</li>
+</ul>
+
+<h1 id="preprocessing">Preprocessing</h1>
+
+<p>A key component of a machine workflow is the <em>data preprocessing</em> step. This can include tasks like:</p>
+
+<ul>
+<li>Cleaning your data</li>
+<li>Feature engineering</li>
+<li>Transforming your data</li>
+</ul>
+
+<p>The wine dataset is tidy and we're generally happy with the features that we have. However, there are a couple of things we could do to make our data more palatable to the machine learning algorithm we decide to use.</p>
+
+<p>The first task is to consider the skewed nature of some of the predictor variables. Machine learning algorithms are thought to perform best when the input distribution is symmetric and unimodal.</p>
+
+<p>The second task is to scale our data. The features in the wine dataset all vary in their ranges and units. Unfortunately many algorithms calculate distances between data points when optimising the model and predictions can be dominated by the features with the highest numerical distances. If we transform each feature to the same scale, distances can be measured on the same playing field. There are many types of scaling available, but here we'll use the standard scaler:</p>
+
+<p><span  class="math">\[
+x_{NEW} = \frac{x_{OLD} - \mu}{\sigma}
+\]</span></p>
+
+<p>The third task is to convert our features to numerical values that the algorithm requires to process. We have a categorical variable that represents high, medium or low alcohol content. To include this, we need to create some dummy variables that encode this information in our feature set in a format that our algorithm will recognise.</p>
+
+<p>A <em>recipe</em> in <code>tidymodels</code> contains all the steps needed to transform our dataset before the model training step.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_recipe <span style="color:#f92672">&lt;-</span>
+  <span style="color:#a6e22e">recipe</span>(quality <span style="color:#f92672">~</span> ., data <span style="color:#f92672">=</span> train_data) <span style="color:#f92672">%&gt;%</span> <span style="color:#75715e">#specify your training set, response and predictor variables</span>
+  <span style="color:#a6e22e">step_log</span>(<span style="color:#a6e22e">all_numeric</span>(), <span style="color:#f92672">-</span>density, <span style="color:#f92672">-</span>pH, offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">%&gt;%</span> <span style="color:#75715e">#log transform with an offset</span>
+  <span style="color:#a6e22e">step_normalize</span>(<span style="color:#a6e22e">all_numeric</span>()) <span style="color:#f92672">%&gt;%</span>  <span style="color:#75715e">#normalise all numeric variables</span>
+  <span style="color:#a6e22e">step_dummy</span>(alcohol) <span style="color:#75715e">#select column to create dummy variables</span></code></pre></div>
+<p>This recipe drops our <code>alcohol</code> variable and replaces it with two new variables, <code>alcohol_low</code> and <code>alcohol_medium</code>. The combinations below correspond to levels of low, medium and high alcohol respectively in a way that our algorithm will understand.</p>
+
+<p><code>prep()</code> calculates what operations need to be applied to the training set. <code>juice()</code> applies these operations to the training set and displays the transformed dataset.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_recipe <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">prep</span>(training <span style="color:#f92672">=</span> train_data) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">juice</span>(<span style="color:#a6e22e">starts_with</span>(<span style="color:#e6db74">&#39;alcohol&#39;</span>)) <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">distinct</span>()</code></pre></div><pre><code>## # A tibble: 3 x 2
+##   alcohol_low alcohol_medium
+##         &lt;dbl&gt;          &lt;dbl&gt;
+## 1           1              0
+## 2           0              1
+## 3           0              0</code></pre>
+<p>The <code>recipes</code> package contains a <em>vast</em> range of step functions that you can use to preprocess your data, enabling you to do things like imputing missing data, type conversion and extracting principal components.</p>
+
+<h1 id="model-training">Model Training</h1>
+
+<p>There are numerous classification models we could use here. The <code>parsnip</code> package features many models including decision trees, random forests and neural networks. Here we're going to use a simple logistic regression model. The probability of belonging to class <span  class="math">\( i \in \{\text{good}, \text{bad}\} \)</span> is given by</p>
+
+<p><span  class="math">\[
+\text{logit}(p_i) = \sum_{k=1}^{n} \beta_k x_k
+\]</span></p>
+
+<p>where <span  class="math">\( \beta_k \)</span> is the coefficient corresponding to feature <span  class="math">\( x_k \)</span>. The logit function constrains <span  class="math">\( p_i \)</span> to fall within <span  class="math">\( [0,1] \)</span>.</p>
+
+<p>We define a model, first by specify the functional form of the model (see <code>parsnip</code> for a list of these). We also need a method of fitting the model, which is included as an 'engine'. The <code>glm</code> package is a standard tool for fitting logistic regression models, so we use this.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">log_reg_model <span style="color:#f92672">&lt;-</span>
+  <span style="color:#a6e22e">logistic_reg</span>() <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">set_engine</span>(<span style="color:#e6db74">&#39;glm&#39;</span>)</code></pre></div>
+<p>It's quite simple, really!</p>
+
+<p>We can now use the <code>workflow()</code> function to build a workflow that includes our preprocessing and training steps in one object. It gives a summary of what data transformations we have used, what modelling approach we have taken and what computational engine we have chosen.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_workflow <span style="color:#f92672">&lt;-</span>
+  <span style="color:#a6e22e">workflow</span>() <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">add_model</span>(log_reg_model) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">add_recipe</span>(wine_recipe)
+
+wine_workflow</code></pre></div><pre><code>## ══ Workflow ═══════════════════════════════════════════════════════════════════════════════════
+## Preprocessor: Recipe
+## Model: logistic_reg()
+## 
+## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## 3 Recipe Steps
+## 
+## ● step_log()
+## ● step_normalize()
+## ● step_dummy()
+## 
+## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## Logistic Regression Model Specification (classification)
+## 
+## Computational engine: glm</code></pre>
+<p>We can now use the <code>fit()</code> function to fit the model on the training data. This gives us some summary information about the model, including the coefficients of the logistic regression.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_fit <span style="color:#f92672">&lt;-</span> wine_workflow <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">fit</span>(data <span style="color:#f92672">=</span> train_data)
+wine_fit</code></pre></div><pre><code>## ══ Workflow [trained] ═════════════════════════════════════════════════════════════════════════
+## Preprocessor: Recipe
+## Model: logistic_reg()
+## 
+## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## 3 Recipe Steps
+## 
+## ● step_log()
+## ● step_normalize()
+## ● step_dummy()
+## 
+## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## 
+## Call:  stats::glm(formula = formula, family = stats::binomial, data = data)
+## 
+## Coefficients:
+##            (Intercept)         `fixed acidity`      `volatile acidity`  
+##                1.91060                 0.52278                -0.62282  
+##          `citric acid`        `residual sugar`               chlorides  
+##               -0.32791                 0.06512                -0.17609  
+##  `free sulfur dioxide`  `total sulfur dioxide`                 density  
+##                0.35616                -0.54590                -0.35653  
+##                     pH               sulphates             alcohol_low  
+##                0.05225                 0.56132                -2.38205  
+##         alcohol_medium  
+##               -1.20433  
+## 
+## Degrees of Freedom: 1199 Total (i.e. Null);  1187 Residual
+## Null Deviance:	    1652 
+## Residual Deviance: 1231 	AIC: 1257</code></pre>
+<p>Higher values of the features that have positive coefficients are more likely to lead to good wines, whereas higher values of features that have negative coefficients are more likely to lead to bad wines. Here we can see that high levels of volatile acidity and free sulfur dioxide are more likely to lead to bad wines, something we pick up in our exploratory analysis. The shows the usefulness of the data visualisation step - it gives us a way to sense check our model.</p>
+
+<h1 id="evaluating-our-model">Evaluating our model</h1>
+
+<p>Most of the functions we need for model evaluation come from the <code>yardstick</code> package. We use two measures of performance:</p>
+
+<ul>
+<li><strong>accuracy</strong> - the proportion of observations that were classed correctly</li>
+<li><strong>recall</strong> - the proportion of good wines that were predicted correctly.</li>
+</ul>
+
+<p>There are numerous metrics to evaluate a machine learning model based on different measures of performance; it's up to user to decide what is most important to them and to ensure that their model is optimised to their metric of choice.</p>
+
+<p>But what dataset to we use to evaluate the model? If we evaluate on our training set, we run the risk that our model captures both the signal and the noise contained in this dataset and unables to generalise very well to data that hasn't been seen before. This is known as <strong>overfitting</strong>. Luckily, we have a test set that we split out at the beginning that hasn't been exposed to the model yet. We use this to evaluate the performance of the model.</p>
+
+<p>In some scenarios, it might be difficult to separate out a test set because it might not be large enough to evaluate the model with a degree of confidence. In this case we would use the whole dataset to train the model and instead use a <strong>cross-validation</strong> strategy as a proxy. We won't cover that here but later in this post we explore how we might use cross-validation for tuning hyperparameters of more complex models.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_test_pred <span style="color:#f92672">&lt;-</span>
+  <span style="color:#a6e22e">predict</span>(wine_fit, test_data) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">bind_cols</span>(test_data <span style="color:#f92672">%&gt;%</span>  <span style="color:#a6e22e">select</span>(quality))</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_test_pred <span style="color:#f92672">%&gt;%</span>                
+  <span style="color:#a6e22e">recall</span>(truth <span style="color:#f92672">=</span> quality, .pred_class)</code></pre></div><pre><code>## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 recall  binary         0.665</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_test_pred <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">accuracy</span>(truth <span style="color:#f92672">=</span> quality, .pred_class)</code></pre></div><pre><code>## # A tibble: 1 x 3
+##   .metric  .estimator .estimate
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+## 1 accuracy binary         0.714</code></pre>
+<p>So 71% of our wines were classes correctly by our model, and 66% of truly good wines were predicted to be good. That's not bad - let's try a more complicated model to get these metrics up.</p>
+
+<h1 id="tuning-hyperparameters">Tuning hyperparameters</h1>
+
+<p>Let's see if we can improve on this performance by using a different model. Let's instead use a random forest model. Without going into the mathematical detail, random forests are rule-based ensemble approaches that make predictions from multiple decision trees constructed in parallel. Decision trees are prone to overfitting but random forests by introducing an extra level of randomness to how trees are constructed.</p>
+
+<p>We can fit random forests as easily as we did the logistic regression model. This time, there are some parameters that are key to determining the overall performance of the model, which we might like to optimise. These are:</p>
+
+<ul>
+<li><code>mtry</code> - the number of predictors to be randomly sampled at each split</li>
+<li><code>min_n</code> - the minimum number of data points at a node needed for a node to be split further.</li>
+</ul>
+
+<p>There is another parameter, giving the number of trees, but we set that as default 500 for the purpose of this exercise.</p>
+
+<p>The model is set up as before, except we use the function <code>tune()</code> as a placeholder for each of these parameters to show that these are going to be tuned.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">rf_model <span style="color:#f92672">&lt;-</span>
+  <span style="color:#a6e22e">rand_forest</span>(mode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;classification&#39;</span>, mtry <span style="color:#f92672">=</span> <span style="color:#a6e22e">tune</span>(), min_n<span style="color:#f92672">=</span> <span style="color:#a6e22e">tune</span>()) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">set_engine</span>(<span style="color:#e6db74">&#39;randomForest&#39;</span>)</code></pre></div>
+<p>We can update our earlier workflow quite easily using <code>update_model()</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_workflow <span style="color:#f92672">&lt;-</span> wine_workflow <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">update_model</span>(rf_model)
+wine_workflow</code></pre></div><pre><code>## ══ Workflow ═══════════════════════════════════════════════════════════════════════════════════
+## Preprocessor: Recipe
+## Model: rand_forest()
+## 
+## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## 3 Recipe Steps
+## 
+## ● step_log()
+## ● step_normalize()
+## ● step_dummy()
+## 
+## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## Random Forest Model Specification (classification)
+## 
+## Main Arguments:
+##   mtry = tune()
+##   min_n = tune()
+## 
+## Computational engine: randomForest</code></pre>
+<p>So how do we tune the hyperparameters? We could evaluate the model for multiple combinations of hyperparameters. We can't use the test set because we using that to evaluate the overall model, but we can't use the training set either because evaluations aren't reliable and could ignore overfitting.</p>
+
+<p>What we could do is to split the training set down further, say, into <span  class="math">\( k \)</span> folds. We could hold out one of these folds, train the model on the other <span  class="math">\( k-1 \)</span> folds, and evaluate the model on the other fold. To ensure that performance is not sensitive to this choice of fold, we evaluate the model <span  class="math">\( k \)</span> times, where each fold is left out once. We average the resulting metrics to get the overall score.</p>
+
+<p>First, we define our folds.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">cell_folds <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">vfold_cv</span>(train_data,v <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>)
+cell_folds</code></pre></div><pre><code>## #  5-fold cross-validation 
+## # A tibble: 5 x 2
+##   splits            id   
+##   &lt;named list&gt;      &lt;chr&gt;
+## 1 &lt;split [960/240]&gt; Fold1
+## 2 &lt;split [960/240]&gt; Fold2
+## 3 &lt;split [960/240]&gt; Fold3
+## 4 &lt;split [960/240]&gt; Fold4
+## 5 &lt;split [960/240]&gt; Fold5</code></pre>
+<p>There are many clever ways we can choose the set of hyperparameters to tune - here we can just choose an integer and the backend will choose a set automatically.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">set.seed</span>(<span style="color:#ae81ff">345</span>)
+wine_tune <span style="color:#f92672">&lt;-</span> 
+  wine_workflow <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">tune_grid</span>(cell_folds,
+            grid <span style="color:#f92672">=</span> <span style="color:#ae81ff">50</span>,
+            control <span style="color:#f92672">=</span> <span style="color:#a6e22e">control_grid</span>(save_pred <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>),
+            metrics <span style="color:#f92672">=</span> <span style="color:#a6e22e">metric_set</span>(accuracy,recall))</code></pre></div>
+<p>From this object we can extract the metrics we need for each combination of hyperparameters.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_tune <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">collect_metrics</span>()</code></pre></div><pre><code>## # A tibble: 98 x 7
+##     mtry min_n .metric  .estimator  mean     n std_err
+##    &lt;int&gt; &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;
+##  1     1    24 accuracy binary     0.753     5 0.00705
+##  2     1    24 recall   binary     0.698     5 0.00675
+##  3     1    31 accuracy binary     0.747     5 0.00610
+##  4     1    31 recall   binary     0.689     5 0.00603
+##  5     2     2 accuracy binary     0.81      5 0.0114 
+##  6     2     2 recall   binary     0.776     5 0.0186 
+##  7     2    15 accuracy binary     0.779     5 0.00801
+##  8     2    15 recall   binary     0.752     5 0.0139 
+##  9     2    24 accuracy binary     0.775     5 0.00685
+## 10     2    24 recall   binary     0.742     5 0.00819
+## # … with 88 more rows</code></pre>
+<p>We can then plot our hyperparameters quite easily against the performance metrics we chose.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">autoplot</span>(wine_tune)</code></pre></div>
+<p><img src="/post/2020-06-14-Tidymodels_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+
+<p>We see that low values of <code>\(min_n\)</code> are associated with better performance. <code>mtry</code> in contrast shows no obvious trend, but the best performance occurs when <code>mtry = 7</code>. We can use <code>select_best()</code> to extract the optimal hyperparameters as judged by our performance metric of choice.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_best <span style="color:#f92672">&lt;-</span> 
+  wine_tune <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">select_best</span>(metric <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;accuracy&#34;</span>)
+wine_best</code></pre></div><pre><code>## # A tibble: 1 x 2
+##    mtry min_n
+##   &lt;int&gt; &lt;int&gt;
+## 1     7     4</code></pre>
+<h1 id="final-model">Final model</h1>
+
+<p>We go back and update our workflow with the optimal model that we have found from the above exercise. The nice function <code>last_fit()</code> carries out the final fit on our training set and evaluates the model on the test set. We just need to input the splitted data object we made at the beginning.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">final_model <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rand_forest</span>(mode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;classification&#39;</span>, mtry <span style="color:#f92672">=</span> <span style="color:#ae81ff">7</span>, min_n <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">set_engine</span>(<span style="color:#e6db74">&#39;randomForest&#39;</span>)
+
+final_workflow <span style="color:#f92672">&lt;-</span> wine_workflow <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">update_model</span>(final_model)
+
+final_fit <span style="color:#f92672">&lt;-</span> final_workflow <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">last_fit</span>(data_split, metrics <span style="color:#f92672">=</span> <span style="color:#a6e22e">metric_set</span>(accuracy,recall))</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">final_fit <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">collect_metrics</span>()</code></pre></div><pre><code>## # A tibble: 2 x 3
+##   .metric  .estimator .estimate
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+## 1 accuracy binary         0.782
+## 2 recall   binary         0.759</code></pre>
+<p>We have now boosted our accuracy metric by 7 percentage points up to 79% and our recall metric up by 10 points to 76%, which suggests that our new and more complex model is performing very well indeed.</p>
+
+<h1 id="resources">Resources</h1>
+
+<p>Tidymodels provides an ideal starting point for R users familiar with the code structure of the Tidyverse who are eager to construct a machine learning workflow. It's comparable to <code>scikit-learn</code> when it comes to ease-of-use and flexibility, and is easily adaptable to more complex problems.</p>
+
+<p>The official <a href="https://www.tidymodels.org/">website</a> is probably the best place to go for further information. For those interested in a more mathematical treatment of basic machine learning principles, the <a href="http://faculty.marshall.usc.edu/gareth-james/ISL/">Introduction to Statistical Learning</a> book is a great start.</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+<span class="separator"><a class="category" href="/categories/tidymodels/">Tidymodels</a><a class="category" href="/categories/machine-learning/">Machine Learning</a><a class="category" href="/categories/r/">R</a></span>
+
+        
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="/js/jquery-appear.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/&#43;DiW/UqRcLbRjq" crossorigin="anonymous"><script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l&#43;B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd&#43;qj&#43;o24G5ZU2zJz" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+            onload="renderMathInElement(document.body);"></script></html></body>
+
+</html>

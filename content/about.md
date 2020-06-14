@@ -1,28 +1,18 @@
 ---
 title: "About"
-description: "Hugo, the world’s fastest framework for building websites"
-date: "2018-02-11"
+description: "About Me"
+date: "2020-05-10"
 aliases: ["about-us","about-hugo","contact"]
-author: "Hugo Authors"
+author: Paul Sharkey
 menu: main
 name: "About"
 weight: 300
 ---
 
-Written in Go, Hugo is an open source static site generator available under the [Apache Licence 2.0.](https://github.com/gohugoio/hugo/blob/master/LICENSE) Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.
+I am a Manchester-based Data Scientist with the BBC. This website serves as a place to document my roles and experience to date and also to make notes on interesting and new topics that I come across.
 
-Hugo makes use of a variety of open source projects including:
+My background is in applied statistics with a focus on environmental applications. My PhD thesis described novel statistical methods for modelling the long-term risk of extratropical cyclones in Europe, with potential benefits for the insurance industry. Since then I worked in engineering consultancy before moving to the BBC where I have been using machine learning applied to large audience consumption datasets.
 
-* https://github.com/russross/blackfriday
-* https://github.com/alecthomas/chroma
-* https://github.com/muesli/smartcrop
-* https://github.com/spf13/cobra
-* https://github.com/spf13/viper
+I am an avid runner with an aim to complete the York marathon in 2020. I also enjoy cooking, reading and politics. I am currently (finally) learning how to play chess.
 
-Hugo is ideal for blogs, corporate websites, creative portfolios, online magazines, single page applications or even a website with thousands of pages.
-
-Hugo is for people who want to hand code their own website without worrying about setting up complicated runtimes, dependencies and databases.
-
-Websites built with Hugo are extremelly fast, secure and can be deployed anywhere including, AWS, GitHub Pages, Heroku, Netlify and any other hosting provider.
-
-Learn more and contribute on [GitHub](https://github.com/gohugoio).
+An up-to-date CV is available [here](files/cv.pdf)

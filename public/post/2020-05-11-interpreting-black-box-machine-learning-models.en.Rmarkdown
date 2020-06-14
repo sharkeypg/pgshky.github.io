@@ -1,0 +1,79 @@
+---
+title: Interpreting Black Box Machine Learning Models
+author: Paul Sharkey
+date: '2020-05-11'
+slug: interpreting-black-box-machine-learning-models
+categories:
+  - Machine Learning
+  - R
+tags: []
+Description: ''
+Tags: []
+Categories: []
+DisableComments: no
+math: true
+markup: mmark
+
+---
+
+```{r}
+library(data.table)
+library(randomForest)
+library(iml)
+library(janitor)
+```
+
+
+As an applied statistician at heart, I've always viewed black box machine learning models with a healthy degree of skepticism. Surely an understanding of your model isn't worth sacrificing to achieve incremental improvements in predictive power? In the environmental applications I've worked on in the past, model interpretation was crucial to understanding how physical processes interact. For example, I used a relatively simple logistic regression to explore which components of a storm system were more likely to signal its lysis (termination) state. What I wasn't aware of until recently is that there are a wealth of approaches to understand the importance of predictor variables in black box models as well. This post will cover just two such approaches, but the reader should refer to the excellent [text](https://christophm.github.io/interpretable-ml-book/) by Christoph Molnar for more examples.
+
+## Data and Modelling
+
+After writing some training material for work I came across the [UCI wine quality dataset](https://archive.ics.uci.edu/ml/datasets/wine+quality) which contains ratings of wine quality as well as measurements relating to the chemical composition of the wine.
+
+Given the possible biases that might arise with ratings, we're going to treat this as a classification problem to predict whether a wine can be classed as good (quality >= 6) or bad (quality < 6).
+
+```{r}
+red_url <- "https://raw.githubusercontent.com/shrikant-temburwar/Wine-Quality-Dataset/master/winequality-red.csv"
+red_raw <- fread(red_url, header = TRUE, sep = ";") %>% 
+  mutate(quality = ifelse(quality >= 6, 'good', 'bad'),
+         quality = factor(quality)) %>% 
+  janitor::clean_names()
+glimpse(red_raw)
+```
+
+This task isn't to find the best model but to illustrate the benefits of interpretable machine learning approaches, so for convenience we choose a random forest model for this task, with default parameters. A later post will discuss how we can optimise a random forest model within the `tidymodels` framework.
+
+```{r}
+rf <- randomForest(quality ~ ., data = red_raw, ntree = 50)
+```
+
+
+## Partial Dependence Plots
+
+The partial dependence plot shows the marginal effect of a predictor variable on a response variable, that is, by how much does the response variable change due to a change in the predictor variable. For a simple linear regression model, this plot would be linear and can be specified very clearly from the model coefficients. For a black box model, producing this plot is slightly more complex.
+
+$$
+\hat{f}_{x_S}(x_S)=E_{x_C}\left[\hat{f}(x_S,x_C)\right]=\int\hat{f}(x_S,x_C)d\mathbb{P}(x_C)
+$$
+
+To find the marginal effect of $$ x_s $$ we take the expectation with respect to the parameter(s) of the model that we are not interested in. For black box models there is no analytical form of this equation, so we need to estimate using Monte Carlo integration:
+
+$$
+\hat{f}_{x_S}(x_S)=\frac{1}{n}\sum_{i=1}^n\hat{f}(x_S,x^{(i)}_{C})
+$$
+
+This method assumes that $$ x_S $$ and $$ x_C $$ are uncorrelated, which should be checked apriori. If such a correlation exists, then training data from $$ x_C $$ may be matched with observations from $$ x_S $$ that may not be realistic; in an example where we want to find the marginal effect of air temperature on air pollution in a model that includes humidity as a predictor, averaging over humidity observations is not justified due its relationship with air temperature, with the result that physically unlikely humidity measurements would be averaged over temperature values to calculate a highly unreliable marginal effect.
+
+The reality of having correlated features is unfortunately not uncommon. Luckily, there is an alternative approach that accounts for possible correlations between predictors. A sensible way to build on the partial dependence plot would be to take the expectation with respect to the conditional distribution of $$ x_C $$ given $$ x_S $$, which would ensure that we only consider reasonable combinations of $$ x_C $$ and $$ x_S $$.
+
+```{r}
+predictor <- Predictor$new(rf, data = red_raw %>% select(-quality),
+                           y = red_raw$quality)
+```
+
+```{r}
+imp <- FeatureImp$new(predictor,loss = 'ce')
+plot(imp)
+```
+
+

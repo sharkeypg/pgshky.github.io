@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>index on Website of Jane Doe</title>
+    <title>index on Paul Sharkey</title>
     <link>/tags/index/</link>
-    <description>Recent content in index on Website of Jane Doe</description>
+    <description>Recent content in index on Paul Sharkey</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     
@@ -13,7 +13,7 @@
     <item>
       <title>Posts</title>
       <link>/post/</link>
-      <pubDate>Wed, 11 Mar 2020 00:00:00 +0000</pubDate>
+      <pubDate>Sun, 14 Jun 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/</guid>
       <description></description>

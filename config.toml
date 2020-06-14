@@ -1,7 +1,7 @@
-baseURL = "https://example.com"
+baseURL = "https://pgshky.netlify.app"
 languageCode = "en"
 DefaultContentLanguage = "en"
-title = "Website of Jane Doe"
+title = "Paul Sharkey"
 theme = "anatole"
 summarylength = 10
 enableEmoji = true
@@ -13,10 +13,10 @@ enableEmoji = true
 #googleAnalytics = "UA-123-45"
 
 [params]
-title = "I'm Jane Doe"
-author = "Jane Doe"
-description = "Call me Jane"
-profilePicture = "images/profile.jpg"
+title = "Paul Sharkey"
+author = "Paul Sharkey"
+description = "Manchester-based Data Scientist"
+profilePicture = "images/paul.jpg"
 keywords = ""
 favicon = "favicons/"
 customCss = []
@@ -30,22 +30,22 @@ use = "katex"  # options: "katex", "mathjax". default is "katex".
 [[params.socialIcons]]
 icon = "fa-linkedin"
 title = "Linkedin"
-url = "https://de.linkedin.com/"
+url = "https://www.linkedin.com/in/paul-sharkey-6b831961/"
 
 [[params.socialIcons]]
 icon = "fa-github"
 title = "GitHub"
-url = "https://github.com/lxndrblz/anatole/"
-
-[[params.socialIcons]]
-icon = "fa-instagram"
-title = "instagram"
-url = "https://www.instagram.com/"
+url = "https://github.com/sharkeypg"
 
 [[params.socialIcons]]
 icon = "fa-envelope"
 title = "e-mail"
-url = "mailto:mail@alexbilz.com"
+url = "mailto:pgshky@gmail.com"
+
+[[params.socialIcons]]
+icon = "fa-twitter"
+title = "Twitter"
+url = "https://twitter.com/pgshky"
 
 ## Menu items
 
