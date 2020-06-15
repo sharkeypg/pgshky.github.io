@@ -29,14 +29,5 @@
       <description>A basic template for using Tidymodels for all your machine learning needs</description>
     </item>
     
-    <item>
-      <title>Interpreting Black Box Machine Learning Models</title>
-      <link>/post/interpreting-black-box-machine-learning-models/</link>
-      <pubDate>Mon, 11 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/post/interpreting-black-box-machine-learning-models/</guid>
-      <description>library(data.table)## ## Attaching package: &amp;#39;data.table&amp;#39;## The following objects are masked from &amp;#39;package:dplyr&amp;#39;: ## ## between, first, last## The following object is masked from &amp;#39;package:purrr&amp;#39;: ## ## transposelibrary(randomForest)## randomForest 4.</description>
-    </item>
-    
   </channel>
 </rss>
