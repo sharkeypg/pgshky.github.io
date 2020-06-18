@@ -10,7 +10,7 @@ enableEmoji = true
 #disqusShortname = ""
 
 # Google Analytics
-#googleAnalytics = "UA-123-45"
+googleAnalytics = "UA-169996015-1"
 
 [params]
 title = "Paul Sharkey"
