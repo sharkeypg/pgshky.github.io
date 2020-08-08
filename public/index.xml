@@ -21,6 +21,15 @@
     </item>
     
     <item>
+      <title>Gloomsters or not? A Sentiment Analysis of MPs on Twitter</title>
+      <link>/post/sentiment-analysis-mps/</link>
+      <pubDate>Fri, 07 Aug 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/sentiment-analysis-mps/</guid>
+      <description>Ever wondered who is the most positive MP on Twitter? In this post, a data-driven approach is used to answer this question</description>
+    </item>
+    
+    <item>
       <title>Machine Learning in R with Tidymodels</title>
       <link>/post/machine-learning-tidymodels/</link>
       <pubDate>Sun, 14 Jun 2020 00:00:00 +0000</pubDate>

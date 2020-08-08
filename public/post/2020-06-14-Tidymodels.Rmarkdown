@@ -9,6 +9,12 @@ summary: 'A basic template for using Tidymodels for all your machine learning ne
 math: true
 markup: mmark
 
+image:
+  caption: "How geographically balanced is Coronavirus content on BBC News?"
+  focal_point: "Smart"
+  preview_only: false
+  placement: 1
+
 ---
 
 ```{r setup, include=FALSE}

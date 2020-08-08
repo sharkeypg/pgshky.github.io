@@ -115,11 +115,9 @@ red_raw <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">fre
 <p>The two classes are finely balanced, which is good!</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">red_raw <span style="color:#f92672">%&gt;%</span>
   <span style="color:#a6e22e">count</span>(quality) <span style="color:#f92672">%&gt;%</span> 
-  <span style="color:#a6e22e">mutate</span>(prop <span style="color:#f92672">=</span> n<span style="color:#f92672">/</span><span style="color:#a6e22e">sum</span>(n))</code></pre></div><pre><code>## # A tibble: 2 x 3
-##   quality     n  prop
-##   &lt;fct&gt;   &lt;int&gt; &lt;dbl&gt;
-## 1 bad       744 0.465
-## 2 good      855 0.535</code></pre>
+  <span style="color:#a6e22e">mutate</span>(prop <span style="color:#f92672">=</span> n<span style="color:#f92672">/</span><span style="color:#a6e22e">sum</span>(n))</code></pre></div><pre><code>##    quality   n      prop
+## 1:     bad 744 0.4652908
+## 2:    good 855 0.5347092</code></pre>
 <p>We can use the <code>glimpse()</code> function to see what our data looks like - all are numeric with the exception of the response variable and the level of alcohol content.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">glimpse</span>(red_raw)</code></pre></div><pre><code>## Rows: 1,599
 ## Columns: 12
@@ -229,35 +227,35 @@ x_{NEW} = \frac{x_{OLD} - \mu}{\sigma}
   <span style="color:#a6e22e">add_model</span>(log_reg_model) <span style="color:#f92672">%&gt;%</span> 
   <span style="color:#a6e22e">add_recipe</span>(wine_recipe)
 
-wine_workflow</code></pre></div><pre><code>## ══ Workflow ═══════════════════════════════════════════════════════════════════════════════════
+wine_workflow</code></pre></div><pre><code>## ══ Workflow ════════════════════════════════════════════════════════════════════════
 ## Preprocessor: Recipe
 ## Model: logistic_reg()
 ## 
-## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## ── Preprocessor ────────────────────────────────────────────────────────────────────
 ## 3 Recipe Steps
 ## 
 ## ● step_log()
 ## ● step_normalize()
 ## ● step_dummy()
 ## 
-## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## ── Model ───────────────────────────────────────────────────────────────────────────
 ## Logistic Regression Model Specification (classification)
 ## 
 ## Computational engine: glm</code></pre>
 <p>We can now use the <code>fit()</code> function to fit the model on the training data. This gives us some summary information about the model, including the coefficients of the logistic regression.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_fit <span style="color:#f92672">&lt;-</span> wine_workflow <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">fit</span>(data <span style="color:#f92672">=</span> train_data)
-wine_fit</code></pre></div><pre><code>## ══ Workflow [trained] ═════════════════════════════════════════════════════════════════════════
+wine_fit</code></pre></div><pre><code>## ══ Workflow [trained] ══════════════════════════════════════════════════════════════
 ## Preprocessor: Recipe
 ## Model: logistic_reg()
 ## 
-## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## ── Preprocessor ────────────────────────────────────────────────────────────────────
 ## 3 Recipe Steps
 ## 
 ## ● step_log()
 ## ● step_normalize()
 ## ● step_dummy()
 ## 
-## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## ── Model ───────────────────────────────────────────────────────────────────────────
 ## 
 ## Call:  stats::glm(formula = formula, family = stats::binomial, data = data)
 ## 
@@ -324,18 +322,18 @@ wine_fit</code></pre></div><pre><code>## ══ Workflow [trained] ════�
   <span style="color:#a6e22e">set_engine</span>(<span style="color:#e6db74">&#39;randomForest&#39;</span>)</code></pre></div>
 <p>We can update our earlier workflow quite easily using <code>update_model()</code>.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">wine_workflow <span style="color:#f92672">&lt;-</span> wine_workflow <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">update_model</span>(rf_model)
-wine_workflow</code></pre></div><pre><code>## ══ Workflow ═══════════════════════════════════════════════════════════════════════════════════
+wine_workflow</code></pre></div><pre><code>## ══ Workflow ════════════════════════════════════════════════════════════════════════
 ## Preprocessor: Recipe
 ## Model: rand_forest()
 ## 
-## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## ── Preprocessor ────────────────────────────────────────────────────────────────────
 ## 3 Recipe Steps
 ## 
 ## ● step_log()
 ## ● step_normalize()
 ## ● step_dummy()
 ## 
-## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## ── Model ───────────────────────────────────────────────────────────────────────────
 ## Random Forest Model Specification (classification)
 ## 
 ## Main Arguments:
@@ -437,6 +435,17 @@ final_fit <span style="color:#f92672">&lt;-</span> final_workflow <span style="c
 <script type="text/javascript" src="/js/jquery.min.js"></script>
 <script type="text/javascript" src="/js/jquery-migrate.min.js"></script>
 <script type="text/javascript" src="/js/jquery-appear.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/&#43;DiW/UqRcLbRjq" crossorigin="anonymous"><script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l&#43;B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd&#43;qj&#43;o24G5ZU2zJz" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
-            onload="renderMathInElement(document.body);"></script></html></body>
+            onload="renderMathInElement(document.body);"></script>
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-169996015-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+</html></body>
 
 </html>

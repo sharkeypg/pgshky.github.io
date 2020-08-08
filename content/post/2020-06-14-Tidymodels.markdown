@@ -9,6 +9,12 @@ summary: 'A basic template for using Tidymodels for all your machine learning ne
 math: true
 markup: mmark
 
+image:
+  caption: "How geographically balanced is Coronavirus content on BBC News?"
+  focal_point: "Smart"
+  preview_only: false
+  placement: 1
+
 ---
 
 
@@ -63,11 +69,9 @@ red_raw %>%
 ```
 
 ```
-## # A tibble: 2 x 3
-##   quality     n  prop
-##   <fct>   <int> <dbl>
-## 1 bad       744 0.465
-## 2 good      855 0.535
+##    quality   n      prop
+## 1:     bad 744 0.4652908
+## 2:    good 855 0.5347092
 ```
 
 We can use the `glimpse()` function to see what our data looks like - all are numeric with the exception of the response variable and the level of alcohol content.
@@ -219,18 +223,18 @@ wine_workflow
 ```
 
 ```
-## ══ Workflow ═══════════════════════════════════════════════════════════════════════════════════
+## ══ Workflow ════════════════════════════════════════════════════════════════════════
 ## Preprocessor: Recipe
 ## Model: logistic_reg()
 ## 
-## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## ── Preprocessor ────────────────────────────────────────────────────────────────────
 ## 3 Recipe Steps
 ## 
 ## ● step_log()
 ## ● step_normalize()
 ## ● step_dummy()
 ## 
-## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## ── Model ───────────────────────────────────────────────────────────────────────────
 ## Logistic Regression Model Specification (classification)
 ## 
 ## Computational engine: glm
@@ -246,18 +250,18 @@ wine_fit
 ```
 
 ```
-## ══ Workflow [trained] ═════════════════════════════════════════════════════════════════════════
+## ══ Workflow [trained] ══════════════════════════════════════════════════════════════
 ## Preprocessor: Recipe
 ## Model: logistic_reg()
 ## 
-## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## ── Preprocessor ────────────────────────────────────────────────────────────────────
 ## 3 Recipe Steps
 ## 
 ## ● step_log()
 ## ● step_normalize()
 ## ● step_dummy()
 ## 
-## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## ── Model ───────────────────────────────────────────────────────────────────────────
 ## 
 ## Call:  stats::glm(formula = formula, family = stats::binomial, data = data)
 ## 
@@ -359,18 +363,18 @@ wine_workflow
 ```
 
 ```
-## ══ Workflow ═══════════════════════════════════════════════════════════════════════════════════
+## ══ Workflow ════════════════════════════════════════════════════════════════════════
 ## Preprocessor: Recipe
 ## Model: rand_forest()
 ## 
-## ── Preprocessor ───────────────────────────────────────────────────────────────────────────────
+## ── Preprocessor ────────────────────────────────────────────────────────────────────
 ## 3 Recipe Steps
 ## 
 ## ● step_log()
 ## ● step_normalize()
 ## ● step_dummy()
 ## 
-## ── Model ──────────────────────────────────────────────────────────────────────────────────────
+## ── Model ───────────────────────────────────────────────────────────────────────────
 ## Random Forest Model Specification (classification)
 ## 
 ## Main Arguments:

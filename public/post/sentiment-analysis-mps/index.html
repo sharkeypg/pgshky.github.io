@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> Paul Sharkey | Gloomsters or not? A Sentiment Analysis of MPs on Twitter </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.68.3" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="Manchester-based Data Scientist">
+    <link rel="stylesheet" href="/css/foundation.css" rel="stylesheet" id="theme-stylesheet">
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="/">
+    
+    <link rel="shortcut icon" href="/favicons/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
+
+    <link rel="canonical" href="/post/sentiment-analysis-mps/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="/images/paul.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">Paul Sharkey</a></h3>
+        <div class="description">
+          <p>Manchester-based Data Scientist</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://www.linkedin.com/in/paul-sharkey-6b831961/" rel="me" >
+          <i class="fa fa-linkedin" aria-hidden="true" title="Linkedin"></i>
+        </a>
+        
+        <a href="https://github.com/sharkeypg" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+        <a href="mailto:pgshky@gmail.com" rel="me" >
+          <i class="fa fa-envelope" aria-hidden="true" title="e-mail"></i>
+        </a>
+        
+        <a href="https://twitter.com/pgshky" rel="me" >
+          <i class="fa fa-twitter" aria-hidden="true" title="Twitter"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; Paul Sharkey 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="About">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>Gloomsters or not? A Sentiment Analysis of MPs on Twitter
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Fri, Aug 7, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">10-minute read</span>
+        </div>
+        
+        </div>
+
+    <p>We're living in a time of polarised opinion, where culture wars are becoming more prevalent and even <em>cough</em> government policy. We've also been told on several occasions that recent crises can be overcome with an optimistic outlook. In parliament, acknowledgement of failure has become a thing of the past, with ministers eager to shift attention away from their handling of the coronavirus pandemic and appearing to rewrite history in doing so. How is this relevant to a data science blog, you may ask? In light of the government's almost ideological optimism, I was interested to know if this was reflected in the data. Tools from natural language processing give us the opportunity to quantify the sentiment behind the words that people use. Speeches from the House of Commons are available for analysis, but these are often dominated by ministers and prominent MPs who are more concerned with showboating and party-political grandstanding than sincere communication of policy.</p>
+
+<p>Twitter, in contrast, is used by most MPs and tends to be a more honest arbiter of their opinions and thoughts. In this post, we analyse the sentiments of MPs on Twitter and identify the most positive MPs who use this medium, as well as assessing whether the unabashed, and arguably, misplaced optimism of the Conservative Party is reflected in the tweets of their MPs.</p>
+
+<h1 id="retrieving-twitter-data">Retrieving Twitter Data</h1>
+
+<p>R's <code>rtweet</code> package provides an easy way to pull tweets from the Twitter API, subject to limits on the number of requests. For example, <code>rtweet</code> only allows a maximum of 3,200 tweets to be grabbed from the timeline of each requested user. If you prefer the RStudio interface over the Twitter UI, this library also allows you to post your own tweets through the R Console.</p>
+
+<p>This exercise requires the knowledge of the Twitter handles of every MP - I'm very thankful to the folks at <a href="https://www.mpsontwitter.co.uk/">MPs on Twitter</a> for providing a table of handles, of which I only had to update a few due to recent changes. Note that these handles were correct at the time of publication and are subject to change.</p>
+
+<p>These are the libraries being used for this exercise.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(rtweet)
+<span style="color:#a6e22e">library</span>(vader)
+<span style="color:#a6e22e">library</span>(tidyverse)
+<span style="color:#a6e22e">library</span>(tidytext)
+<span style="color:#a6e22e">library</span>(data.table)</code></pre></div>
+<p>Next we import the table of Twitter handles, select only the columns we need, and remove the '@' symbol from the list of handles.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">mps <span style="color:#f92672">&lt;-</span>  <span style="color:#a6e22e">fread</span>(<span style="color:#e6db74">&#39;https://raw.githubusercontent.com/sharkeypg/Random/master/twitter_mps.csv&#39;</span>, header <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>)
+
+handles <span style="color:#f92672">&lt;-</span>
+  mps <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">select</span>(Handle, Party, Constituency) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">mutate</span>(Handle_stripped <span style="color:#f92672">=</span> <span style="color:#a6e22e">tolower</span>(<span style="color:#a6e22e">str_remove_all</span>(Handle, <span style="color:#e6db74">&#34;@&#34;</span>)))</code></pre></div>
+<p>We can pass these through to <code>get_timelines()</code>, where we ask to pull a maximum of 1000 tweets per MP.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">tmls <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">get_timelines</span>(handles<span style="color:#f92672">$</span>Handle_stripped, n <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span>)</code></pre></div>
+<p>The output of <code>get_timelines()</code> contains a plethora of fields - we only need a small number of these. We're not interested in what MPs retweet, but rather the tweets they create themselves. We also specify a date filter to restrict the dataset to tweets sent after the date of 2019 General Election.</p>
+
+<p>Tweets are messy data sources and need some extensive tidying before we can do anything further. We remove any URLS, mentions, line breaks, special characters or emojis, ampersands, and any unnecessary blank space. We join the dataset back onto our original table to attach the party and constituency information for each MP. Piping this all together gives us the following.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">url_regex <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&amp;+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+&#34;</span>
+
+tmls_new <span style="color:#f92672">&lt;-</span> 
+  tmls <span style="color:#f92672">%&gt;%</span> 
+  dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">filter</span>(is_retweet <span style="color:#f92672">==</span> <span style="color:#66d9ef">FALSE</span>,
+                created_at <span style="color:#f92672">&gt;</span> <span style="color:#e6db74">&#39;2019-12-12&#39;</span>) <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">mutate</span>(text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, url_regex),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, <span style="color:#e6db74">&#34;#\\S+&#34;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, <span style="color:#e6db74">&#34;@\\S+&#34;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, <span style="color:#e6db74">&#34;\\n&#34;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, <span style="color:#e6db74">&#39;[\U{1f100}-\U{9f9FF}]&#39;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, <span style="color:#e6db74">&#39;&amp;amp;&#39;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39; - &#39;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;[\u{2000}-\u{3000}]&#39;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_remove_all</span>(text, pattern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;[^\x01-\x7F]&#39;</span>),
+         text <span style="color:#f92672">=</span> <span style="color:#a6e22e">str_squish</span>(text),
+         screen_name <span style="color:#f92672">=</span> <span style="color:#a6e22e">tolower</span>(screen_name)) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">left_join</span>(handles, by <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;screen_name&#39;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Handle_stripped&#39;</span>)) <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">select</span>(name, Party, Constituency, created_at, text)
+
+<span style="color:#a6e22e">glimpse</span>(tmls_new)</code></pre></div><pre><code>## Rows: 193,214
+## Columns: 5
+## $ name         &lt;chr&gt; &#34;Aaron Bell MP&#34;, &#34;Aaron Bell MP&#34;, &#34;Aaron Bell MP&#34;, &#34;Aaro…
+## $ Party        &lt;chr&gt; &#34;Conservative&#34;, &#34;Conservative&#34;, &#34;Conservative&#34;, &#34;Conserv…
+## $ Constituency &lt;chr&gt; &#34;Newcastle-under-Lyme&#34;, &#34;Newcastle-under-Lyme&#34;, &#34;Newcast…
+## $ created_at   &lt;dttm&gt; 2020-08-04 09:42:22, 2020-07-20 14:55:05, 2020-07-19 09…
+## $ text         &lt;chr&gt; &#34;Im delighted to see the Governments scheme fund Innovat…</code></pre>
+<p>So what do MPs like to tweet about? Without going into too much detail on this, we can look at the top words MPs like to use when tweeting. The <code>tidytext</code> library allows us to wrangle with text data so easily - we can break each tweet down into individual words and remove what are known as 'stop words', common words ('the', 'and', 'or', etc) used to tie sentences together but are generally devoid of any meaning.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">words <span style="color:#f92672">&lt;-</span> 
+  tmls_new <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">unnest_tokens</span>(output <span style="color:#f92672">=</span> word, input <span style="color:#f92672">=</span> text) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">anti_join</span>(stop_words) <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">count</span>(word) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">top_n</span>(<span style="color:#ae81ff">10</span>) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">arrange</span>(<span style="color:#a6e22e">desc</span>(n))
+
+words</code></pre></div><pre><code>## # A tibble: 10 x 2
+##    word           n
+##    &lt;chr&gt;      &lt;int&gt;
+##  1 support    16801
+##  2 people     15967
+##  3 government 13483
+##  4 local       9154
+##  5 time        9075
+##  6 uk          8412
+##  7 workers     6371
+##  8 day         6061
+##  9 nhs         6008
+## 10 news        5924</code></pre>
+<p>These top words aren't surprising and are consistent with what you'd expect from a parliamentary representative. Our main objective however, is to associate some measure of sentiment to a Tweet, so how exactly do we do this?</p>
+
+<h1 id="methodology">Methodology</h1>
+
+<p>Sentiment analysis is a branch of natural language processing that detects and assigns a measure of polarity within text. This can be an incredibly useful tool in a business context; making it easier to summarise customer feedback and survey responses. Sentiment analysis models generally focus on determining whether a piece of text can be described as either positive, negative or neutral. There are two main types of algorithms used for this task:</p>
+
+<ul>
+<li>Rule-based approaches that give sentiment scores based on a set of manually-crafted rools</li>
+<li>Machine learning methods that learn from data to predict polarity</li>
+</ul>
+
+<p>Given the absence of training data, I'll be using a state-of-the-art rule-based approach known as VADER. VADER, or Valence Aware Dictionary for sEntiment Reasoning, is a model that creates a dictionary mapping words and other features to sentiment expressions. It is able to capture both the polarity of opinion (positive, negative, neutral) and its intensity (distinguishing 'good' versus 'excellent' for example). It also makes use of other aspects of sentence structure to capture intensity, for example punctuation and capitalisation. A compound score is given for a text that ranges between -1 (extremely negative) and 1 (extremely positive). To illustrate this, let's compare two variations of the same sentence:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">get_vader</span>(<span style="color:#e6db74">&#39;I am so very happy.&#39;</span>)</code></pre></div><pre><code>##                                                    compound       pos       neu 
+##   0.00000   0.00000   0.00000   0.00000   3.27135   0.64500   0.51600   0.48400 
+##       neg but_count 
+##   0.00000   0.00000</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">get_vader</span>(<span style="color:#e6db74">&#39;I AM SO VERY HAPPY!!!&#39;</span>)</code></pre></div><pre><code>##                                                    compound       pos       neu 
+##   0.00000   0.00000   0.00000   0.00000   3.27135   0.73100   0.56300   0.43700 
+##       neg but_count 
+##   0.00000   0.00000</code></pre>
+<p>The fact that in the second case, the text has been changed to all caps followed by some exclamation marks has increased the intensity of the positive sentiment and this is reflected in the compound score. For details on other criteria VADER uses to compute the compound score, the <a href="http://comp.social.gatech.edu/papers/icwsm14.vader.hutto.pdf">original paper</a> is the best place to look.</p>
+
+<h1 id="who-is-the-most-positive-mp-on-twitter">Who is the most positive MP on Twitter?</h1>
+
+<p>In VADER, we have a relatively simple but powerful methodology to determine the sentiment of tweets, especially since the scoring rules were established from social media blogs. Applying VADER to our collection of tweets is a relatively simple task. To mitigate the possibility that VADER may not recognise all lexical features contained in the tweets, we use an error catcher to return <code>NA</code> for a tweet that VADER cannot process.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">vader_compound <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x) {
+  y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">tryCatch</span>(<span style="color:#a6e22e">tail</span>(<span style="color:#a6e22e">get_vader</span>(x),<span style="color:#ae81ff">5</span>)[1], error <span style="color:#f92672">=</span> <span style="color:#a6e22e">function</span>(e) <span style="color:#66d9ef">NA</span>)
+  <span style="color:#a6e22e">return</span>(y)
+}
+
+<span style="color:#75715e">#vader</span>
+vader_scores <span style="color:#f92672">&lt;-</span>
+  tmls_new <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">mutate</span>(vader_scores <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.numeric</span>(<span style="color:#a6e22e">sapply</span>(text, vader_compound )))</code></pre></div>
+<p>The most positive tweet from this sample was by the Tory MP for Keighley, <a href="https://twitter.com/_robbiemoore">Robbie Moore</a>, who said: &quot;Huge congrats to businesses that won their categories at Special to Joe Smith of for top prize of Winner of Winners! Awards are great success story for Ilkley brilliant means of showcasing our great businesses&quot;</p>
+
+<p>The jointly most negative tweets were written by Labour MP <a href="https://twitter.com/ApsanaBegumMP">Apsana Begum</a> and Tory MP <a href="https://twitter.com/david_duguid">David Duguid</a>. Apsana Begum spoke of an example of racially charged violence in the 1970s: &quot;The original abuse is bad enough but then followed up by an elected councillor?There is a lot of stress and frustration on all sides within the political and social system but this kind of behaviour is not OK.No excuse for stress and frustration becoming hate and abuse.&quot;</p>
+
+<p>David Duguid spoke about abuse directed at a Scottish Tory colleague on Twitter: &quot;The original abuse is bad enough but then followed up by an elected councillor?There is a lot of stress and frustration on all sides within the political and social system but this kind of behaviour is not OK.No excuse for stress and frustration becoming hate and abuse.&quot;</p>
+
+<p>So who is the most positive MP on Twitter? To measure this, we filter out MPs that have written fewer than 30 tweets in the period studied and we take their mean VADER score.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">vader_mps <span style="color:#f92672">&lt;-</span>
+  vader_scores <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">group_by</span>(name, Party) <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">summarise</span>(total_tweets <span style="color:#f92672">=</span> <span style="color:#a6e22e">n</span>(),
+            mean_score  <span style="color:#f92672">=</span> <span style="color:#a6e22e">mean</span>(vader_scores, na.rm <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>), .groups <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;drop&#39;</span>) <span style="color:#f92672">%&gt;%</span>
+  dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">filter</span>(total_tweets <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">30</span>) <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">top_n</span>(<span style="color:#ae81ff">10</span>, mean_score) <span style="color:#f92672">%&gt;%</span>
+  <span style="color:#a6e22e">arrange</span>(<span style="color:#a6e22e">desc</span>(mean_score))
+vader_mps</code></pre></div><pre><code>## # A tibble: 10 x 4
+##    name                        Party        total_tweets mean_score
+##    &lt;chr&gt;                       &lt;chr&gt;               &lt;int&gt;      &lt;dbl&gt;
+##  1 David Rutley MP             Conservative           80      0.732
+##  2 Rehman Chishti              Conservative          304      0.715
+##  3 Kwasi Kwarteng MP           Conservative           43      0.707
+##  4 Graham Stuart MP            Conservative          132      0.651
+##  5 Alan Mak MP 🇬🇧              Conservative          139      0.627
+##  6 Alberto Costa MP #StayAlert Conservative          425      0.621
+##  7 Nadhim Zahawi #StayAlert    Conservative           99      0.621
+##  8 Robin Walker                Conservative          217      0.617
+##  9 Amanda Solloway             Conservative          270      0.612
+## 10 Justin Tomlinson MP         Conservative          136      0.608</code></pre>
+<p>The Tory MP for Macclesfield, <a href="https://twitter.com/DavidRutley">David Rutley</a>, is the winner. In fact, the Conservatives make up the entirety of the top 10.</p>
+
+<h1 id="how-do-the-parties-compare">How do the parties compare?</h1>
+
+<p>We can compare the distribution of VADER scores across the main parties.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">vader_temp <span style="color:#f92672">&lt;-</span> vader_scores <span style="color:#f92672">%&gt;%</span> dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">filter</span>(Party <span style="color:#f92672">%in%</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;Conservative&#39;</span>, <span style="color:#e6db74">&#39;Labour&#39;</span>, <span style="color:#e6db74">&#39;Scottish National Party&#39;</span>, <span style="color:#e6db74">&#39;Liberal Democrat&#39;</span>))
+
+<span style="color:#a6e22e">ggplot</span>(vader_temp) <span style="color:#f92672">+</span> 
+  <span style="color:#a6e22e">geom_boxplot</span>(<span style="color:#a6e22e">aes</span>(x<span style="color:#f92672">=</span>Party, y <span style="color:#f92672">=</span> vader_scores)) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">ylab</span>(<span style="color:#e6db74">&#39;VADER score&#39;</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">ggtitle</span>(<span style="color:#e6db74">&#39;VADER scores for MPs tweets across the main UK political parties&#39;</span>)</code></pre></div>
+<p><img src="/post/2020-07-04-sentiment-analysis-mps_files/figure-html/unnamed-chunk-11-1.png" width="960" /></p>
+
+<p>MPs of all political persuasions are more likely to convey positive rather than negative sentiment. While the overall distribution of VADER scores is similar across the parties, the Conservatives' median score is about 0.2 higher than the Labour party, which is unsurprising. The government's job is to champion policies that they're in a position to implement; the opposition's job is to scrutinise these policies and (usually) put forward the case as to why they will be bad for the country. It's reasonable to expect these roles to be reflected in the language of their respective MPs on Twitter.</p>
+
+<p>We can see how the party scores have evolved since the last general election.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">vader_time <span style="color:#f92672">&lt;-</span> 
+  vader_temp <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">mutate</span>(Date <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.Date</span>(created_at)) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">group_by</span>(Party, Date) <span style="color:#f92672">%&gt;%</span> 
+  <span style="color:#a6e22e">summarise</span>(mean_score <span style="color:#f92672">=</span> <span style="color:#a6e22e">mean</span>(vader_scores, na.rm <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>))
+
+<span style="color:#a6e22e">ggplot</span>(vader_time, <span style="color:#a6e22e">aes</span>(x <span style="color:#f92672">=</span> Date, y <span style="color:#f92672">=</span> mean_score, group <span style="color:#f92672">=</span> Party, colour <span style="color:#f92672">=</span> Party)) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">geom_line</span>(alpha <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.3</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">geom_smooth</span>(se <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">ylab</span>(<span style="color:#e6db74">&#39;VADER score&#39;</span>) <span style="color:#f92672">+</span>
+  <span style="color:#a6e22e">ggtitle</span>(<span style="color:#e6db74">&#39;Average VADER score by day, by party&#39;</span>, subtitle <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Local average also shown&#39;</span>)</code></pre></div>
+<p><img src="/post/2020-07-04-sentiment-analysis-mps_files/figure-html/unnamed-chunk-12-1.png" width="960" /></p>
+
+<p>The above plot shows that MPs across all the main political parties are less positive on Twitter now compared to the end of last year. A pandemic will do that. The Conservatives were consistent in producing the most positive content since the election, though this suffered a marked drop in positivity over the course of this period as the pandemic hit. There has been a slight uptick in recent weeks however, likely a result of their attempt to restore confidence in the economy. The Labour party have consistently been the most negative, with a slight increase around the time of the leadership election, but has fallen back significantly in recent weeks, again likely as a result of their response to the government's questionable handling of the pandemic. The impact of a leadership election is also plain to see from the sharp increase in positive sentiment from the Liberal Democrats in recent weeks.</p>
+
+<h1 id="takeaways">Take-aways</h1>
+
+<p>VADER is a simple concept but clearly has involved countless hours of research into making a wonderfully powerful tool. This analysis has shown that indeed the Conservative party are a more optimistic bunch that their opponents, but when you're in government, that's your job, isn't it?</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+<span class="separator"><a class="category" href="/categories/nlp/">NLP</a><a class="category" href="/categories/sentiment-analysis/">Sentiment Analysis</a><a class="category" href="/categories/r/">R</a></span>
+
+        
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="/js/jquery-appear.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/&#43;DiW/UqRcLbRjq" crossorigin="anonymous"><script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l&#43;B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd&#43;qj&#43;o24G5ZU2zJz" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+            onload="renderMathInElement(document.body);"></script>
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-169996015-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+</html></body>
+
+</html>
