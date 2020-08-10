@@ -21,7 +21,7 @@ Twitter, in contrast, is used by most MPs and tends to be a more honest arbiter 
 
 # Retrieving Twitter Data
 
-R's `rtweet` package provides an easy way to pull tweets from the Twitter API, subject to limits on the number of requests. For example, `rtweet` only allows a maximum of 3,200 tweets to be grabbed from the timeline of each requested user. If you prefer the RStudio interface over the Twitter UI, this library also allows you to post your own tweets through the R Console.
+R's `rtweet` package provides an easy way to pull tweets from the Twitter API, subject to limits on the number of requests. For example, `rtweet` only allows a maximum of 3,200 tweets to be grabbed from the timeline of each requested user. If you prefer the RStudio interface over the Twitter UI, this library also allows you to post your own tweets through the R Console. The official `rtweet` [documentation](https://docs.ropensci.org/rtweet/) tells you how to get set up with the Twitter API (you need your own Twitter account).
 
 This exercise requires the knowledge of the Twitter handles of every MP - I'm very thankful to the folks at [MPs on Twitter](https://www.mpsontwitter.co.uk/) for providing a table of handles, of which I only had to update a few due to recent changes. Note that these handles were correct at the time of publication and are subject to change.
 
@@ -144,11 +144,9 @@ vader_scores <-
   mutate(vader_scores = as.numeric(sapply(text, vader_compound )))
 ```
 
-The most positive tweet from this sample was by the Tory MP for Keighley, [Robbie Moore](https://twitter.com/_robbiemoore), who said: "`r vader_scores %>% top_n(1, vader_scores) %>% select(text) %>% as.character()`"
+The most positive tweet from this sample was by the Tory MP for Keighley, [Robbie Moore](https://twitter.com/_robbiemoore), who said: *"Huge congrats to businesses that won their categories at Special to Joe Smith of for top prize of Winner of Winners! Awards are great success story for Ilkley brilliant means of showcasing our great businesses"*
 
-The jointly most negative tweets were written by Labour MP [Apsana Begum](https://twitter.com/ApsanaBegumMP) and Tory MP [David Duguid](https://twitter.com/david_duguid). Apsana Begum spoke of an example of racially charged violence in the 1970s: "`r vader_scores %>% top_n(-1, vader_scores) %>% select(text) %>% slice(2) %>% as.character()`" 
-
-David Duguid spoke about abuse directed at a Scottish Tory colleague on Twitter: "`r vader_scores %>% top_n(-1, vader_scores) %>% select(text) %>% slice(2) %>% as.character()`"
+The most negative tweet was written by Tory MP [David Duguid](https://twitter.com/david_duguid), who said: *"The original abuse is bad enough but then followed up by an elected councillor?There is a lot of stress and frustration on all sides within the political and social system but this kind of behaviour is not OK.No excuse for stress and frustration becoming hate and abuse."*
 
 So who is the most positive MP on Twitter? To measure this, we filter out MPs that have written fewer than 30 tweets in the period studied and we take their mean VADER score.
 
@@ -200,7 +198,7 @@ ggplot(vader_time, aes(x = Date, y = mean_score, group = Party, colour = Party))
 
 The above plot shows that MPs across all the main political parties are less positive on Twitter now compared to the end of last year. A pandemic will do that. The Conservatives were consistent in producing the most positive content since the election, though this suffered a marked drop in positivity over the course of this period as the pandemic hit. There has been a slight uptick in recent weeks however, likely a result of their attempt to restore confidence in the economy. The Labour party have consistently been the most negative, with a slight increase around the time of the leadership election, but has fallen back significantly in recent weeks, again likely as a result of their response to the government's questionable handling of the pandemic. The impact of a leadership election is also plain to see from the sharp increase in positive sentiment from the Liberal Democrats in recent weeks.
 
-# Take-aways
+# Takeaways
 
 VADER is a simple concept but clearly has involved countless hours of research into making a wonderfully powerful tool. This analysis has shown that indeed the Conservative party are a more optimistic bunch that their opponents, but when you're in government, that's your job, isn't it?
 

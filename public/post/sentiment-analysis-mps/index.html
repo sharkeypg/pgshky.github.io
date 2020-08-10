@@ -88,7 +88,7 @@
 
 <h1 id="retrieving-twitter-data">Retrieving Twitter Data</h1>
 
-<p>R's <code>rtweet</code> package provides an easy way to pull tweets from the Twitter API, subject to limits on the number of requests. For example, <code>rtweet</code> only allows a maximum of 3,200 tweets to be grabbed from the timeline of each requested user. If you prefer the RStudio interface over the Twitter UI, this library also allows you to post your own tweets through the R Console.</p>
+<p>R's <code>rtweet</code> package provides an easy way to pull tweets from the Twitter API, subject to limits on the number of requests. For example, <code>rtweet</code> only allows a maximum of 3,200 tweets to be grabbed from the timeline of each requested user. If you prefer the RStudio interface over the Twitter UI, this library also allows you to post your own tweets through the R Console. The official <code>rtweet</code> <a href="https://docs.ropensci.org/rtweet/">documentation</a> tells you how to get set up with the Twitter API (you need your own Twitter account).</p>
 
 <p>This exercise requires the knowledge of the Twitter handles of every MP - I'm very thankful to the folks at <a href="https://www.mpsontwitter.co.uk/">MPs on Twitter</a> for providing a table of handles, of which I only had to update a few due to recent changes. Note that these handles were correct at the time of publication and are subject to change.</p>
 
@@ -129,7 +129,7 @@ tmls_new <span style="color:#f92672">&lt;-</span>
   <span style="color:#a6e22e">left_join</span>(handles, by <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#39;screen_name&#39;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Handle_stripped&#39;</span>)) <span style="color:#f92672">%&gt;%</span>
   <span style="color:#a6e22e">select</span>(name, Party, Constituency, created_at, text)
 
-<span style="color:#a6e22e">glimpse</span>(tmls_new)</code></pre></div><pre><code>## Rows: 193,214
+<span style="color:#a6e22e">glimpse</span>(tmls_new)</code></pre></div><pre><code>## Rows: 193,383
 ## Columns: 5
 ## $ name         &lt;chr&gt; &#34;Aaron Bell MP&#34;, &#34;Aaron Bell MP&#34;, &#34;Aaron Bell MP&#34;, &#34;Aaro…
 ## $ Party        &lt;chr&gt; &#34;Conservative&#34;, &#34;Conservative&#34;, &#34;Conservative&#34;, &#34;Conserv…
@@ -148,16 +148,16 @@ tmls_new <span style="color:#f92672">&lt;-</span>
 words</code></pre></div><pre><code>## # A tibble: 10 x 2
 ##    word           n
 ##    &lt;chr&gt;      &lt;int&gt;
-##  1 support    16801
-##  2 people     15967
-##  3 government 13483
-##  4 local       9154
-##  5 time        9075
-##  6 uk          8412
-##  7 workers     6371
-##  8 day         6061
-##  9 nhs         6008
-## 10 news        5924</code></pre>
+##  1 support    16824
+##  2 people     15981
+##  3 government 13473
+##  4 local       9175
+##  5 time        9088
+##  6 uk          8420
+##  7 workers     6376
+##  8 day         6070
+##  9 nhs         6021
+## 10 news        5918</code></pre>
 <p>These top words aren't surprising and are consistent with what you'd expect from a parliamentary representative. Our main objective however, is to associate some measure of sentiment to a Tweet, so how exactly do we do this?</p>
 
 <h1 id="methodology">Methodology</h1>
@@ -191,11 +191,9 @@ words</code></pre></div><pre><code>## # A tibble: 10 x 2
 vader_scores <span style="color:#f92672">&lt;-</span>
   tmls_new <span style="color:#f92672">%&gt;%</span> 
   <span style="color:#a6e22e">mutate</span>(vader_scores <span style="color:#f92672">=</span> <span style="color:#a6e22e">as.numeric</span>(<span style="color:#a6e22e">sapply</span>(text, vader_compound )))</code></pre></div>
-<p>The most positive tweet from this sample was by the Tory MP for Keighley, <a href="https://twitter.com/_robbiemoore">Robbie Moore</a>, who said: &quot;Huge congrats to businesses that won their categories at Special to Joe Smith of for top prize of Winner of Winners! Awards are great success story for Ilkley brilliant means of showcasing our great businesses&quot;</p>
+<p>The most positive tweet from this sample was by the Tory MP for Keighley, <a href="https://twitter.com/_robbiemoore">Robbie Moore</a>, who said: <em>&quot;Huge congrats to businesses that won their categories at Special to Joe Smith of for top prize of Winner of Winners! Awards are great success story for Ilkley brilliant means of showcasing our great businesses&quot;</em></p>
 
-<p>The jointly most negative tweets were written by Labour MP <a href="https://twitter.com/ApsanaBegumMP">Apsana Begum</a> and Tory MP <a href="https://twitter.com/david_duguid">David Duguid</a>. Apsana Begum spoke of an example of racially charged violence in the 1970s: &quot;The original abuse is bad enough but then followed up by an elected councillor?There is a lot of stress and frustration on all sides within the political and social system but this kind of behaviour is not OK.No excuse for stress and frustration becoming hate and abuse.&quot;</p>
-
-<p>David Duguid spoke about abuse directed at a Scottish Tory colleague on Twitter: &quot;The original abuse is bad enough but then followed up by an elected councillor?There is a lot of stress and frustration on all sides within the political and social system but this kind of behaviour is not OK.No excuse for stress and frustration becoming hate and abuse.&quot;</p>
+<p>The most negative tweet was written by Tory MP <a href="https://twitter.com/david_duguid">David Duguid</a>, who said: <em>&quot;The original abuse is bad enough but then followed up by an elected councillor?There is a lot of stress and frustration on all sides within the political and social system but this kind of behaviour is not OK.No excuse for stress and frustration becoming hate and abuse.&quot;</em></p>
 
 <p>So who is the most positive MP on Twitter? To measure this, we filter out MPs that have written fewer than 30 tweets in the period studied and we take their mean VADER score.</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">vader_mps <span style="color:#f92672">&lt;-</span>
@@ -210,15 +208,15 @@ vader_mps</code></pre></div><pre><code>## # A tibble: 10 x 4
 ##    name                        Party        total_tweets mean_score
 ##    &lt;chr&gt;                       &lt;chr&gt;               &lt;int&gt;      &lt;dbl&gt;
 ##  1 David Rutley MP             Conservative           80      0.732
-##  2 Rehman Chishti              Conservative          304      0.715
+##  2 Rehman Chishti              Conservative          305      0.715
 ##  3 Kwasi Kwarteng MP           Conservative           43      0.707
 ##  4 Graham Stuart MP            Conservative          132      0.651
-##  5 Alan Mak MP 🇬🇧              Conservative          139      0.627
-##  6 Alberto Costa MP #StayAlert Conservative          425      0.621
-##  7 Nadhim Zahawi #StayAlert    Conservative           99      0.621
-##  8 Robin Walker                Conservative          217      0.617
-##  9 Amanda Solloway             Conservative          270      0.612
-## 10 Justin Tomlinson MP         Conservative          136      0.608</code></pre>
+##  5 Alan Mak MP 🇬🇧              Conservative          140      0.627
+##  6 Nadhim Zahawi #StayAlert    Conservative          100      0.624
+##  7 Alberto Costa MP #StayAlert Conservative          425      0.621
+##  8 Robin Walker                Conservative          216      0.615
+##  9 Amanda Solloway             Conservative          272      0.614
+## 10 Neil Hudson                 Conservative          194      0.609</code></pre>
 <p>The Tory MP for Macclesfield, <a href="https://twitter.com/DavidRutley">David Rutley</a>, is the winner. In fact, the Conservatives make up the entirety of the top 10.</p>
 
 <h1 id="how-do-the-parties-compare">How do the parties compare?</h1>
@@ -250,7 +248,7 @@ vader_mps</code></pre></div><pre><code>## # A tibble: 10 x 4
 
 <p>The above plot shows that MPs across all the main political parties are less positive on Twitter now compared to the end of last year. A pandemic will do that. The Conservatives were consistent in producing the most positive content since the election, though this suffered a marked drop in positivity over the course of this period as the pandemic hit. There has been a slight uptick in recent weeks however, likely a result of their attempt to restore confidence in the economy. The Labour party have consistently been the most negative, with a slight increase around the time of the leadership election, but has fallen back significantly in recent weeks, again likely as a result of their response to the government's questionable handling of the pandemic. The impact of a leadership election is also plain to see from the sharp increase in positive sentiment from the Liberal Democrats in recent weeks.</p>
 
-<h1 id="takeaways">Take-aways</h1>
+<h1 id="takeaways">Takeaways</h1>
 
 <p>VADER is a simple concept but clearly has involved countless hours of research into making a wonderfully powerful tool. This analysis has shown that indeed the Conservative party are a more optimistic bunch that their opponents, but when you're in government, that's your job, isn't it?</p>
 
